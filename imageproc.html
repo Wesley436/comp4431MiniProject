@@ -76,6 +76,7 @@
                             <li><a class="dropdown-item" href="#brightness">Brightness</a></li>
                             <li><a class="dropdown-item" href="#contrast">Contrast</a></li>
                             <li><a class="dropdown-item" href="#posterization">Posterization</a></li>
+                            <li><a class="dropdown-item" href="#histogramEqualization">Histogram Equalization</a></li>
                             <li><a class="dropdown-item" href="#threshold">Threshold</a></li>
                             <li><a class="dropdown-item" href="#comic-color">Comic Colour</a></li>
                             <li><a class="dropdown-item" href="#auto-contrast">Automatic Contrast</a></li>
@@ -208,6 +209,98 @@
                                         </div>
                                         <div class="input-group-append"><span class="input-group-text">2 bits</span></div>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Histogram Equalization -->
+                    <div class="tab-pane" id="histogramEqualization">
+                        <div class="container-fluid">
+                            <div class="row">
+                                <div class="col-3">
+                                    <label for="RGBorGrayscale">On: RGB equalization, Off: Grayscale equalization</label>
+                                    <div class="input-group">
+                                        <input class="form-control toggle-control" id="RGBorGrayscale" type="checkbox" checked = true onchange="document.getElementById('showRHistogram').disabled = !this.checked;document.getElementById('showGHistogram').disabled = !this.checked;document.getElementById('showBHistogram').disabled = !this.checked"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-3">
+                                    <label for="showRHistogram">R</label>
+                                    <div class="input-group">
+                                        <input class="form-control toggle-control" id="showRHistogram" type="checkbox" checked/>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <label for="showGHistogram">G</label>
+                                    <div class="input-group">
+                                        <input class="form-control toggle-control" id="showGHistogram" type="checkbox" checked/>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <label for="showBHistogram">B</label>
+                                    <div class="input-group">
+                                        <input class="form-control toggle-control" id="showBHistogram" type="checkbox" checked/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="input-group">
+                                        <button type="button" class="btn btn-primary" id="displayHistograms" data-toggle="collapse" data-target="#collapseDemo">Toggle histograms</button>
+                                    </div>
+                                </div>
+                                <div id="collapseDemo" class="collapse">
+                                    <br>
+                                    <div class="row">
+                                        <h5>Before processing:</h5>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-4">
+                                            <p>R</p>
+                                            <canvas id="inputRHistogram" width="320" height="240"></canvas>
+                                        </div>
+                                        <div class="col-4">
+                                            <p>G</p>
+                                            <canvas id="inputGHistogram" width="320" height="240"></canvas>
+                                        </div>
+                                        <div class="col-4">
+                                            <p>B</p>
+                                            <canvas id="inputBHistogram" width="320" height="240"></canvas>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-4">
+                                            <p>Grayscale</p>
+                                            <canvas id="inputGrayscaleHistogram" width="320" height="240"></canvas>
+                                        </div>
+                                    </div>
+                                    <!-- TODO: dispaly of CDF of preprocessed image -->
+                                    <div class="row">
+                                        <h5>After processing:</h5>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-4">
+                                            <p>R</p>
+                                            <canvas id="outputRHistogram" width="320" height="240"></canvas>
+                                        </div>
+                                        <div class="col-4">
+                                            <p>G</p>
+                                            <canvas id="outputGHistogram" width="320" height="240"></canvas>
+                                        </div>
+                                        <div class="col-4">
+                                            <p>B</p>
+                                            <canvas id="outputBHistogram" width="320" height="240"></canvas>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-4">
+                                            <p>Grayscale</p>
+                                            <canvas id="outputGrayscaleHistogram" width="320" height="240"></canvas>
+                                        </div>
+                                    </div>
+                                    <!-- TODO: dispaly of CDF of processed image -->
                                 </div>
                             </div>
                         </div>
@@ -432,5 +525,6 @@
     <script src="js/outline.js"></script>
     <script src="js/main.js"></script>
     <script src="js/layers.js"></script>
+    <script async src="js/opencv.js" type="text/javascript"></script>
 </body>
 </html>

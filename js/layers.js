@@ -36,6 +36,54 @@
                 imageproc.posterization(inputImage, outputImage, rbits, gbits, bbits);
                 break;
 
+            case "histogramEqualization":
+                // for getting and displaying histograms of the RGB channels as well as grayscale of the input iamge
+                let canvasNames = ['inputRHistogram', 'inputGHistogram', 'inputBHistogram', 'inputGrayscaleHistogram'];
+                let inputHistograms = [];
+                
+                for (let i = 0; i < 4; i++) {
+                    let src = cv.imread('input');
+                    let channels;
+                    if (i == 3){
+                        cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+                        channels = [0];
+                    }else{
+                        channels = [i];
+                    }
+                    let srcVec = new cv.MatVector();
+                    srcVec.push_back(src);
+                    let accumulate = false;
+                    
+                    let histSize = [256];
+                    let ranges = [0, 255];
+                    let hist = new cv.Mat();
+                    let mask = new cv.Mat();
+                    let color = new cv.Scalar(255, 255, 255);
+                    let scale = 1;
+
+                    cv.calcHist(srcVec, channels, mask, hist, histSize, ranges, accumulate);
+
+                    // storing the generated histogram, should be useful for processing later
+                    inputHistograms.push(hist);
+
+                    let result = cv.minMaxLoc(hist, mask);
+                    let max = result.maxVal;
+                    let dst = new cv.Mat.zeros(src.rows, histSize[0] * scale,
+                                            cv.CV_8UC3);
+                    // draw histogram
+                    for (let j = 0; j < histSize[0]; j++) {
+                        let binVal = hist.data32F[j] * src.rows / max;
+                        let point1 = new cv.Point(j * scale, src.rows - 1);
+                        let point2 = new cv.Point((j + 1) * scale - 1, src.rows - binVal);
+                        cv.rectangle(dst, point1, point2, color, cv.FILLED);
+                    }
+                    cv.imshow(canvasNames[i], dst);
+                    src.delete(); dst.delete(); srcVec.delete(); mask.delete(); hist.delete();
+                }
+
+                // TODO: process and equalize the image's histograms, as well as displaying them
+                break;
+
             // Apply threshold
             case "threshold":
                 var threshold = parseFloat($("#threshold-value").val());
