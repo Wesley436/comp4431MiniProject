@@ -70,12 +70,30 @@
                     let max = result.maxVal;
                     let dst = new cv.Mat.zeros(src.rows, histSize[0] * scale,
                                             cv.CV_8UC3);
+                    let sum=0;
+                    let sum_list=[];
                     // draw histogram
                     for (let j = 0; j < histSize[0]; j++) {
                         let binVal = hist.data32F[j] * src.rows / max;
-                        let point1 = new cv.Point(j * scale, src.rows - 1);
+                        let point1 = new cv.Point(j * scale, src.rows);
                         let point2 = new cv.Point((j + 1) * scale - 1, src.rows - binVal);
                         cv.rectangle(dst, point1, point2, color, cv.FILLED);
+                        sum+=binVal;
+                        sum_list.push(sum);
+                    }
+                    //draw cdf
+                    if (sum!=0){
+                        for (let j=0; j< histSize[0]-1; j++){
+                            let point1 = new cv.Point(j * scale, src.rows - sum_list[j]*src.rows/sum_list.slice(-1));
+                            let point2 = new cv.Point((j + 1) * scale, src.rows - sum_list[j+1]*src.rows/sum_list.slice(-1));
+                            cv.line(dst,point1,point2,new cv.Scalar(255,0,0),1);
+                        }
+                    } else {
+                        for (let j=0; j< histSize[0]-1; j++){
+                            let point1 = new cv.Point(j * scale, 0);
+                            let point2 = new cv.Point((j + 1) * scale, 0);
+                            cv.line(dst,point1,point2,new cv.Scalar(255,0,0),1);
+                        }
                     }
                     cv.imshow(canvasNames[i], dst);
                     src.delete(); dst.delete(); srcVec.delete(); mask.delete(); hist.delete();
