@@ -39,7 +39,9 @@
             case "histogramEqualization":
                 // for getting and displaying histograms of the RGB channels as well as grayscale of the input iamge
                 let canvasNames = ['inputRHistogram', 'inputGHistogram', 'inputBHistogram', 'inputGrayscaleHistogram'];
+                let outputCanvasNames = ['outputRHistogram', 'outputGHistogram', 'outputBHistogram', 'outputGrayscaleHistogram'];
                 let inputHistograms = [];
+                let outputHistograms = [];
                 
                 for (let i = 0; i < 4; i++) {
                     let src = cv.imread('input');
@@ -60,7 +62,7 @@
                     let mask = new cv.Mat();
                     let color = new cv.Scalar(255, 255, 255);
                     let scale = 1;
-
+                    
                     cv.calcHist(srcVec, channels, mask, hist, histSize, ranges, accumulate);
 
                     // storing the generated histogram, should be useful for processing later
@@ -72,6 +74,7 @@
                                             cv.CV_8UC3);
                     let sum=0;
                     let sum_list=[];
+                    let cdf_list = new Array(256).fill(0);
                     // draw histogram
                     for (let j = 0; j < histSize[0]; j++) {
                         let binVal = hist.data32F[j] * src.rows / max;
@@ -84,21 +87,39 @@
                     //draw cdf
                     if (sum!=0){
                         for (let j=0; j< histSize[0]-1; j++){
-                            let point1 = new cv.Point(j * scale, src.rows - sum_list[j]*src.rows/sum_list.slice(-1));
-                            let point2 = new cv.Point((j + 1) * scale, src.rows - sum_list[j+1]*src.rows/sum_list.slice(-1));
+                            let point1 = new cv.Point((j + 0.5) * scale, src.rows - sum_list[j]*src.rows/sum_list.slice(-1));
+                            let point2 = new cv.Point((j + 1.5) * scale, src.rows - sum_list[j+1]*src.rows/sum_list.slice(-1));
                             cv.line(dst,point1,point2,new cv.Scalar(255,0,0),1);
+                            cdf_list[j+1]=sum_list[j+1]/sum_list.slice(-1);
                         }
                     } else {
                         for (let j=0; j< histSize[0]-1; j++){
-                            let point1 = new cv.Point(j * scale, 0);
-                            let point2 = new cv.Point((j + 1) * scale, 0);
+                            let point1 = new cv.Point((j + 0.5) * scale, 0);
+                            let point2 = new cv.Point((j + 1.5) * scale, 0);
                             cv.line(dst,point1,point2,new cv.Scalar(255,0,0),1);
                         }
                     }
                     cv.imshow(canvasNames[i], dst);
+
+                    //equalize image's histogram
+                    for (let j=0; j < inputImage.data.length; j+=4){
+                        outputImage.data[j+i]=inputImage.data[j+i];
+                    }
+                    if (i==3 && !$("#RGBorGrayscale").prop("checked")){
+                        for (let j=0; j < inputImage.data.length; j+=4){
+                            outputImage.data[j]=Math.round((histSize[0]-1)*cdf_list[inputImage.data[j]]);
+                            outputImage.data[j+1]=Math.round((histSize[0]-1)*cdf_list[inputImage.data[j+1]]);
+                            outputImage.data[j+2]=Math.round((histSize[0]-1)*cdf_list[inputImage.data[j+2]]);
+                        }
+                        
+                    } else if (i==0 && $("#showRHistogram").prop("checked") || i==1 && $("#showGHistogram").prop("checked") || i==2 && $("#showBHistogram").prop("checked")){
+                        for (let j=0; j < inputImage.data.length; j+=4){
+                            outputImage.data[j+i]=Math.round((histSize[0]-1)*cdf_list[inputImage.data[j+i]]);
+                        }
+                    }                       
                     src.delete(); dst.delete(); srcVec.delete(); mask.delete(); hist.delete();
                 }
-
+                
                 // TODO: process and equalize the image's histograms, as well as displaying them
                 break;
 
