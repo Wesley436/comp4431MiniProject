@@ -40,8 +40,6 @@
                 // for getting and displaying histograms of the RGB channels as well as grayscale of the input iamge
                 let canvasNames = ['inputRHistogram', 'inputGHistogram', 'inputBHistogram', 'inputGrayscaleHistogram'];
                 let outputCanvasNames = ['outputRHistogram', 'outputGHistogram', 'outputBHistogram', 'outputGrayscaleHistogram'];
-                let inputHistograms = [];
-                let outputHistograms = [];
                 
                 for (let i = 0; i < 4; i++) {
                     let src = cv.imread('input');
@@ -65,13 +63,9 @@
                     
                     cv.calcHist(srcVec, channels, mask, hist, histSize, ranges, accumulate);
 
-                    // storing the generated histogram, should be useful for processing later
-                    inputHistograms.push(hist);
-
                     let result = cv.minMaxLoc(hist, mask);
                     let max = result.maxVal;
-                    let dst = new cv.Mat.zeros(src.rows, histSize[0] * scale,
-                                            cv.CV_8UC3);
+                    let dst = new cv.Mat.zeros(src.rows, histSize[0] * scale, cv.CV_8UC3);
                     let sum=0;
                     let sum_list=[];
                     let cdf_list = new Array(256).fill(0);
@@ -105,19 +99,55 @@
                     for (let j=0; j < inputImage.data.length; j+=4){
                         outputImage.data[j+i]=inputImage.data[j+i];
                     }
+                    
+                    let outputHistogram = new Array(256).fill(0);
+
                     if (i==3 && !$("#RGBorGrayscale").prop("checked")){
                         for (let j=0; j < inputImage.data.length; j+=4){
                             outputImage.data[j]=Math.round((histSize[0]-1)*cdf_list[inputImage.data[j]]);
                             outputImage.data[j+1]=Math.round((histSize[0]-1)*cdf_list[inputImage.data[j+1]]);
                             outputImage.data[j+2]=Math.round((histSize[0]-1)*cdf_list[inputImage.data[j+2]]);
+
+                            let cdfIndex = Math.round((outputImage.data[j]+outputImage.data[j+1]+outputImage.data[j+2])/3);
+                            outputHistogram[cdfIndex]++;
                         }
                         
                     } else if (i==0 && $("#showRHistogram").prop("checked") || i==1 && $("#showGHistogram").prop("checked") || i==2 && $("#showBHistogram").prop("checked")){
                         for (let j=0; j < inputImage.data.length; j+=4){
                             outputImage.data[j+i]=Math.round((histSize[0]-1)*cdf_list[inputImage.data[j+i]]);
+                            outputHistogram[outputImage.data[j+i]]++;
                         }
-                    }                       
-                    src.delete(); dst.delete(); srcVec.delete(); mask.delete(); hist.delete();
+                    }
+
+                    let outputDst = new cv.Mat.zeros(src.rows, histSize[0] * scale, cv.CV_8UC3);
+                    let outputSum=0;
+                    let outputSum_list=[];
+                    // draw processed histograms
+                    for (let k = 0; k < outputHistogram.length; k++) {
+                        let binVal = outputHistogram[k] * src.rows / max;
+                        let point1 = new cv.Point(k * scale, src.rows);
+                        let point2 = new cv.Point((k + 1) * scale - 1, src.rows - binVal);
+                        cv.rectangle(outputDst, point1, point2, color, cv.FILLED);
+                        outputSum+=binVal;
+                        outputSum_list.push(outputSum);
+                    }
+                    // draw processed cdf
+                    if (outputSum!=0){
+                        for (let j=0; j< outputHistogram.length-1; j++){
+                            let point1 = new cv.Point((j + 0.5) * scale, src.rows - outputSum_list[j]*src.rows/outputSum_list.slice(-1));
+                            let point2 = new cv.Point((j + 1.5) * scale, src.rows - outputSum_list[j+1]*src.rows/outputSum_list.slice(-1));
+                            cv.line(outputDst,point1,point2,new cv.Scalar(255,0,0),1);
+                        }
+                    } else {
+                        for (let j=0; j< outputHistogram.length-1; j++){
+                            let point1 = new cv.Point((j + 0.5) * scale, 0);
+                            let point2 = new cv.Point((j + 1.5) * scale, 0);
+                            cv.line(outputDst,point1,point2,new cv.Scalar(255,0,0),1);
+                        }
+                    }
+                    cv.imshow(outputCanvasNames[i], outputDst);
+
+                    src.delete(); dst.delete(); srcVec.delete(); mask.delete(); hist.delete(); outputDst.delete();
                 }
                 
                 // TODO: process and equalize the image's histograms, as well as displaying them
