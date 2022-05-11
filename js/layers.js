@@ -104,11 +104,13 @@
 
                     if (i==3 && !$("#RGBorGrayscale").prop("checked")){
                         for (let j=0; j < inputImage.data.length; j+=4){
-                            outputImage.data[j]=Math.round((histSize[0]-1)*cdf_list[inputImage.data[j]]);
-                            outputImage.data[j+1]=Math.round((histSize[0]-1)*cdf_list[inputImage.data[j+1]]);
-                            outputImage.data[j+2]=Math.round((histSize[0]-1)*cdf_list[inputImage.data[j+2]]);
+                            let Y = Math.round(0.299*inputImage.data[j] + 0.587*inputImage.data[j+1] + 0.114*inputImage.data[j+2]);
 
-                            let cdfIndex = Math.round((outputImage.data[j]+outputImage.data[j+1]+outputImage.data[j+2])/3);
+                            outputImage.data[j]=Math.round((histSize[0]-1)*cdf_list[Y]);
+                            outputImage.data[j+1]=Math.round((histSize[0]-1)*cdf_list[Y]);
+                            outputImage.data[j+2]=Math.round((histSize[0]-1)*cdf_list[Y]);
+
+                            let cdfIndex = Math.round(outputImage.data[j]);
                             outputHistogram[cdfIndex]++;
                         }
                         
